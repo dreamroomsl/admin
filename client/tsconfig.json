@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "module": "commonjs",
+    "noEmit": false,
+    "sourceMap": false,
+    "outDir": "build-js",
+    "target": "es6"
+  },
+  "files": [
+    "src/main.ts",
+    "src/typings.d.ts"
+  ]
+}

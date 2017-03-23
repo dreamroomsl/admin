@@ -1,0 +1,20 @@
+<div>
+  <h2>Configuración</h2>
+  <form [formGroup]="formModel" (ngSubmit)="onSubmit()" class="form-horizontal" role="form">
+    <div class="form-group">
+      <label for="branch" class="col-lg-2 control-label">Oficina</label>
+      <div class="col-lg-2">
+        <input autocomplete="off" type="text" class="form-control" id="branch" placeholder="Oficina" formControlName="branch">
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="securityKey" class="col-lg-2 control-label">Clave de Seguridad</label>
+      <div class="col-lg-2">
+        <input autocomplete="off" type="text" class="form-control" id="securityKey" placeholder="Clave numérica" formControlName="securityKey">
+      </div>
+    </div>
+    <div class="form-group" style="padding-left:15px">
+      <button class="btn btn-primary col-lg-offset-2" type="submit">Guardar</button>
+    </div>
+  </form>
+</div>
