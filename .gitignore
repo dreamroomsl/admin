@@ -1,5 +1,4 @@
 client/build-js
 client/node_modules
-server/build
 server/node_modules
 server/npm-debug.log
