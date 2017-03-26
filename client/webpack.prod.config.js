@@ -9,6 +9,7 @@ const DedupePlugin             = require('webpack/lib/optimize/DedupePlugin');
 const DefinePlugin             = require('webpack/lib/DefinePlugin');
 const OccurrenceOrderPlugin    = require('webpack/lib/optimize/OccurrenceOrderPlugin');
 const UglifyJsPlugin           = require('webpack/lib/optimize/UglifyJsPlugin');
+const ProvidePlugin            = require('webpack/lib/ProvidePlugin');
 
 const ENV = process.env.NODE_ENV = 'production';
 const metadata = {
@@ -52,7 +53,8 @@ module.exports = {
     new UglifyJsPlugin({
       compress: {screw_ie8 : true},
       mangle: {screw_ie8 : true}
-    })
+    }),
+    new ProvidePlugin({jQuery: 'jquery', $: 'jquery', jquery: 'jquery', 'window.Jquery': "jquery"})
   ],
   resolve: {
     extensions: ['.ts', '.js']
