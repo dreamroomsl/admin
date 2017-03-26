@@ -15,7 +15,9 @@
     "prebuild:aot": "npm run clean",
     "build:aot": "ngc -p tsconfig.aot.json && webpack --config webpack.prod.config.aot.js --progress --profile --colors",
     "preserve:dist:aot": "npm run build:aot",
-    "serve:dist:aot": "static dist -H '{\"Cache-Control\": \"no-cache, must-revalidate\"}' -z"
+    "serve:dist:aot": "static dist -H '{\"Cache-Control\": \"no-cache, must-revalidate\"}' -z",
+    "predeploy" : "npm run build",
+    "deploy" : "./deploy.sh ~/nginx/static/admin"
   },
   "dependencies": {
     "@angular/common": "2.0.1",
