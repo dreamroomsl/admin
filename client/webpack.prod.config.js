@@ -9,6 +9,7 @@ const DedupePlugin             = require('webpack/lib/optimize/DedupePlugin');
 const DefinePlugin             = require('webpack/lib/DefinePlugin');
 const OccurrenceOrderPlugin    = require('webpack/lib/optimize/OccurrenceOrderPlugin');
 const UglifyJsPlugin           = require('webpack/lib/optimize/UglifyJsPlugin');
+const ProvidePlugin            = require('webpack/lib/ProvidePlugin');
 
 const ENV = process.env.NODE_ENV = 'production';
 const metadata = {
@@ -29,12 +30,14 @@ module.exports = {
       {test: /\.ts$/,   loaders: [
         {loader: 'ts-loader', query: {compilerOptions: {noEmit: false}}},
         {loader: 'angular2-template-loader'}
-      ]}
+      ]},
+      {test: /\.(png|woff|woff2|eot|ttf|svg)$/, loader: 'url-loader?limit=0'}
     ]
   },
   output: {
-    path    : './dist',
-    filename: 'bundle.js'
+    path    : path.join(__dirname, 'dist'),
+    filename: 'bundle.js',
+    publicPath: '/admin/'
   },
   plugins: [
     new CommonsChunkPlugin({name: 'vendor', filename: 'vendor.bundle.js', minChunks: Infinity}),
@@ -50,7 +53,8 @@ module.exports = {
     new UglifyJsPlugin({
       compress: {screw_ie8 : true},
       mangle: {screw_ie8 : true}
-    })
+    }),
+    new ProvidePlugin({jQuery: 'jquery', $: 'jquery', jquery: 'jquery', 'window.Jquery': "jquery"})
   ],
   resolve: {
     extensions: ['.ts', '.js']
