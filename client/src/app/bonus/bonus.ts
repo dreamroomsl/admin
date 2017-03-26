@@ -8,8 +8,8 @@ import 'rxjs/add/operator/map';
 import * as CryptoJS from 'crypto-js';
 
 @Component({
-  selector    : 'dr-bonus',
-  templateUrl : 'bonus.html',
+  selector: 'dr-bonus',
+  template: require('./bonus.html'),
 })
 export class Bonus {
 

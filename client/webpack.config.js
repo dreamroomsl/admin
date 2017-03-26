@@ -19,7 +19,13 @@ module.exports = {
     contentBase: 'src',
     historyApiFallback: true,
     host: metadata.host,
-    port: metadata.port
+    port: metadata.port,
+    proxy: {
+      '/admin/api': {
+        target: 'http://localhost:3000/',
+        pathRewrite: { "^/admin/api": "/" }
+      }
+    }
   },
   devtool: 'source-map',
   entry: {
@@ -30,12 +36,12 @@ module.exports = {
     loaders: [
       {test: /\.css$/,  loader: 'raw-loader', exclude: /node_modules/},
       {test: /\.css$/,  loader: 'style-loader!css-loader?-minimize', exclude: /src/},
-      {test: /\.html$/, loader: 'raw-loader'},
+      {test: /\.html$/, loader: 'html-loader'},
       {test: /\.ts$/,   loaders: [
         {loader: 'ts-loader', query: {compilerOptions: {noEmit: false}}},
         {loader: 'angular2-template-loader'}
       ]},
-      {test: /\.(png|woff|woff2|eot|ttf|svg)$/, loader: 'url-loader?limit=100000'}
+      {test: /\.(png|woff|woff2|eot|ttf|svg)$/, loader: 'url-loader?limit=0'}
     ]
   },
   output: {

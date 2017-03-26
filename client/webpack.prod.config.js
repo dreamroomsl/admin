@@ -29,11 +29,12 @@ module.exports = {
       {test: /\.ts$/,   loaders: [
         {loader: 'ts-loader', query: {compilerOptions: {noEmit: false}}},
         {loader: 'angular2-template-loader'}
-      ]}
+      ]},
+      {test: /\.(png|woff|woff2|eot|ttf|svg)$/, loader: 'url-loader?limit=0'}
     ]
   },
   output: {
-    path    : './dist',
+    path    : path.join(__dirname, 'dist'),
     filename: 'bundle.js'
   },
   plugins: [

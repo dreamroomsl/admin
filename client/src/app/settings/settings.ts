@@ -10,8 +10,8 @@ export interface SettingsInfo {
 }
 
 @Component({
-  selector    : 'dr-settings',
-  templateUrl : 'settings.html',
+  selector: 'dr-settings',
+  template: require('./settings.html'),
 })
 export class Settings {
 
@@ -34,13 +34,14 @@ export class Settings {
 
   refreshData() {
     let settings = Settings.get();
-
-    if (settings.branch != undefined) {
+    if (settings != undefined && settings.branch != undefined) {
       this.formModel.patchValue({
         branch      : settings.branch,
         securityKey : settings.securityKey == undefined ? '' : '****************',
       });
     }
+    
+
   }
 
   onSubmit() {
