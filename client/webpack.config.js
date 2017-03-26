@@ -19,6 +19,7 @@ module.exports = {
     contentBase: 'src',
     historyApiFallback: true,
     host: metadata.host,
+    publicPath: '/admin/',
     port: metadata.port,
     proxy: {
       '/admin/api': {

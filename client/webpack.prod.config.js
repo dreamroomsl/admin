@@ -35,7 +35,8 @@ module.exports = {
   },
   output: {
     path    : path.join(__dirname, 'dist'),
-    filename: 'bundle.js'
+    filename: 'bundle.js',
+    publicPath: '/admin/'
   },
   plugins: [
     new CommonsChunkPlugin({name: 'vendor', filename: 'vendor.bundle.js', minChunks: Infinity}),
