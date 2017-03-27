@@ -226,8 +226,12 @@ router.route("/bonus/report/basic/:branch/:fromDate/:toDate")
 
     var response = {};
 
-    var fromDate = {$gte: [ "$statements.date", new Date(req.params.fromDate + "T00:00:00.0Z")]};
-    var toDate   = {$lte: [ "$statements.date", new Date(req.params.toDate   + "T23:59:59.999Z")]}
+    // mongodb uses UTC DateTime
+    
+    var offset   = (new Date().getTimezoneOffset()) * 60000;
+
+    var fromDate = {$gte: [ "$statements.date", new Date((new Date(req.params.fromDate + "T00:00:00.0Z")).getTime() + offset)]};
+    var toDate   = {$lte: [ "$statements.date", new Date((new Date(req.params.toDate   + "T23:59:59.999Z")).getTime() + offset)]}
 
     mongoBonus.aggregate([
       { $match: {
