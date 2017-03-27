@@ -17,8 +17,7 @@
     "preserve:dist:aot": "npm run build:aot",
     "serve:dist:aot": "static dist -H '{\"Cache-Control\": \"no-cache, must-revalidate\"}' -z",
     "predeploy": "npm run build",
-    "deploy": "./deploy.sh ~/nginx/static/admin"
-  },
+    "deploy" : "sudo ./deploy.sh /usr/share/nginx/html/admin"  },
   "dependencies": {
     "@angular/common": "2.0.1",
     "@angular/compiler": "2.0.1",
