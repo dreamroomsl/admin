@@ -6,15 +6,23 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const core_1 = require("@angular/core");
-exports.nodejsServer = 'http://localhost:3000';
-let MyApp = class MyApp {
-};
+var core_1 = require("@angular/core");
+exports.nodejsServer = '/admin/api';
+var MyApp = (function () {
+    function MyApp() {
+    }
+    MyApp.prototype.ngOnInit = function () {
+        $.fn.datepicker.defaults.language = "es";
+        $.fn.datepicker.defaults.todayHighlight = true;
+        $.fn.datepicker.defaults.autoclose = true;
+    };
+    return MyApp;
+}());
 MyApp = __decorate([
     core_1.Component({
         selector: 'my-app',
         styleUrls: ['app.css'],
-        templateUrl: 'app.html'
+        template: require('./app.html')
     })
 ], MyApp);
 exports.MyApp = MyApp;

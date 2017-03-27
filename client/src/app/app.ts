@@ -7,5 +7,11 @@ export const nodejsServer = '/admin/api';
   styleUrls: [ 'app.css' ],
   template: require('./app.html')
 })
-export class MyApp {
+export class MyApp implements OnInit {
+
+  ngOnInit() {
+    $.fn.datepicker.defaults.language       = "es";
+    $.fn.datepicker.defaults.todayHighlight = true;
+    $.fn.datepicker.defaults.autoclose      = true;
+  }
 }

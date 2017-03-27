@@ -9,16 +9,16 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const core_1 = require("@angular/core");
-const forms_1 = require("@angular/forms");
-const http_1 = require("@angular/http");
-const settings_1 = require("../settings/settings");
-const bootbox = require("bootbox");
-const app = require("../app");
+var core_1 = require("@angular/core");
+var forms_1 = require("@angular/forms");
+var http_1 = require("@angular/http");
+var settings_1 = require("../settings/settings");
+var bootbox = require("bootbox");
+var app = require("../app");
 require("rxjs/add/operator/map");
-const CryptoJS = require("crypto-js");
-let Bonus = class Bonus {
-    constructor(http) {
+var CryptoJS = require("crypto-js");
+var Bonus = (function () {
+    function Bonus(http) {
         this.http = http;
         this.statements = [];
         this.searchData = [];
@@ -34,7 +34,7 @@ let Bonus = class Bonus {
         this.balance = 0;
         this.settings = settings_1.Settings.get();
     }
-    getSecurityToken(data) {
+    Bonus.prototype.getSecurityToken = function (data) {
         console.log('Data to encrypt=' + data);
         var key = CryptoJS.enc.Utf8.parse(this.settings.securityKey);
         var iv = CryptoJS.enc.Utf8.parse(this.settings.securityKey);
@@ -46,9 +46,10 @@ let Bonus = class Bonus {
         });
         console.log('Data encrypted=' + encrypted.toString(CryptoJS.enc.Utf8));
         return "" + encrypted;
-    }
-    sendAction(minutes, cash) {
-        let bonus = {
+    };
+    Bonus.prototype.sendAction = function (minutes, cash) {
+        var _this = this;
+        var bonus = {
             telephone: this.formModel.value.telephone,
             branch: this.settings.branch,
             name: this.formModel.value.name || '',
@@ -62,21 +63,33 @@ let Bonus = class Bonus {
             bonus.cash = cash;
         }
         this.http.post(app.nodejsServer + '/bonus/', bonus)
-            .map(response => response.json())
-            .subscribe(response => {
+            .map(function (response) { return response.json(); })
+            .subscribe(function (response) {
             console.log('Data=' + JSON.stringify(response, undefined, 2));
             if (response.error == true) {
                 console.log("ERROR!!");
                 bootbox.alert('No se ha podido actualizar la información. <strong>' + response.message + '</strong>');
             }
             else {
-                this.showOk = true;
-                setTimeout(() => { this.showOk = false; }, 500);
-                this.searchBonus();
+                _this.showOk = true;
+                setTimeout(function () { _this.showOk = false; }, 500);
+                _this.searchBonus();
             }
         });
-    }
-    clearFields() {
+    };
+    Bonus.prototype.duplicateBonus = function (minutes, cash) {
+        var _this = this;
+        this.http.get(app.nodejsServer + '/nextbonus/' + this.settings.branch)
+            .map(function (response) { return response.json(); })
+            .subscribe(function (response) {
+            _this.formModel.patchValue({
+                ticketId: response.next,
+            });
+            _this.statements = [];
+            _this.sendAction(minutes, cash);
+        });
+    };
+    Bonus.prototype.clearFields = function () {
         this.formModel.reset();
         this.balance = 0;
         this.showNoExist = false;
@@ -84,51 +97,55 @@ let Bonus = class Bonus {
         this.showOptions = false;
         this.statements = [];
         this.searchData = [];
-    }
-    searchByName() {
+    };
+    Bonus.prototype.searchByName = function () {
+        var _this = this;
         if (Number(this.formModel.value.ticketId) != 0) {
             return;
         }
-        let name = this.formModel.value.name;
+        var name = this.formModel.value.name;
         this.http.get(app.nodejsServer + '/bonusbyname/' + this.settings.branch + '/' + name)
-            .map(response => response.json())
-            .subscribe(response => {
+            .map(function (response) { return response.json(); })
+            .subscribe(function (response) {
             if (!response.error) {
-                this.searchData = response.register;
+                _this.searchData = response.register;
             }
         });
-    }
-    searchByTelephone() {
+    };
+    Bonus.prototype.searchByTelephone = function () {
+        var _this = this;
         if (Number(this.formModel.value.ticketId) != 0) {
             return;
         }
-        let telephone = this.formModel.value.telephone;
+        var telephone = this.formModel.value.telephone;
         this.http.get(app.nodejsServer + '/bonusbytelephone/' + this.settings.branch + '/' + telephone)
-            .map(response => response.json())
-            .subscribe(response => {
+            .map(function (response) { return response.json(); })
+            .subscribe(function (response) {
             if (!response.error) {
-                this.searchData = response.register;
+                _this.searchData = response.register;
             }
         });
-    }
-    searchByTicketId(ticketId) {
+    };
+    Bonus.prototype.searchByTicketId = function (ticketId) {
         this.formModel.patchValue({
             ticketId: ticketId,
         });
         this.searchBonus();
-    }
-    searchNextBonusId() {
+    };
+    Bonus.prototype.searchNextBonusId = function () {
+        var _this = this;
         this.http.get(app.nodejsServer + '/nextbonus/' + this.settings.branch)
-            .map(response => response.json())
-            .subscribe(response => {
-            this.formModel.patchValue({
+            .map(function (response) { return response.json(); })
+            .subscribe(function (response) {
+            _this.formModel.patchValue({
                 ticketId: response.next,
             });
-            this.searchBonus();
+            _this.searchBonus();
         });
-    }
-    searchBonus() {
-        let ticketId = this.formModel.value.ticketId;
+    };
+    Bonus.prototype.searchBonus = function () {
+        var _this = this;
+        var ticketId = this.formModel.value.ticketId;
         console.log('searchSubmit:' + ticketId);
         if (isNaN(Number(ticketId))) {
             ticketId = undefined;
@@ -137,53 +154,54 @@ let Bonus = class Bonus {
             this.searchNextBonusId();
         }
         this.http.get(app.nodejsServer + '/bonus/' + this.settings.branch + '/' + ticketId)
-            .map(response => response.json())
-            .subscribe(response => {
+            .map(function (response) { return response.json(); })
+            .subscribe(function (response) {
             console.log('Data=' + JSON.stringify(response, undefined, 2));
             if (response.error == true) {
                 console.log("ERROR!!");
-                this.clearFields();
-                this.formModel.patchValue({
+                _this.clearFields();
+                _this.formModel.patchValue({
                     ticketId: ticketId,
                 });
-                this.showNoExist = true;
-                this.showBalance = false;
-                this.statements = [];
+                _this.showNoExist = true;
+                _this.showBalance = false;
+                _this.statements = [];
             }
             else {
-                this.formModel.patchValue({
+                _this.formModel.patchValue({
                     name: response.register.data.name,
                     telephone: response.register.data.telephone,
                 });
-                this.balance = response.register.balance;
-                this.statements = response.register.data.statements || [];
-                this.showNoExist = false;
-                this.showBalance = true;
-                this.statements.sort((a, b) => {
-                    let date1 = new Date(a.date);
-                    let date2 = new Date(b.date);
+                _this.balance = response.register.balance;
+                _this.statements = response.register.data.statements || [];
+                _this.showNoExist = false;
+                _this.showBalance = true;
+                _this.statements.sort(function (a, b) {
+                    var date1 = new Date(a.date);
+                    var date2 = new Date(b.date);
                     return date2.getTime() - date1.getTime();
                 });
             }
             if (Number(ticketId) >= 1) {
-                if (this.settings.branch != undefined &&
-                    this.settings.branch.length == 3 &&
-                    this.settings.securityKey != undefined &&
-                    this.settings.securityKey.length == 16) {
-                    this.showOptions = true;
+                if (_this.settings.branch != undefined &&
+                    _this.settings.branch.length == 3 &&
+                    _this.settings.securityKey != undefined &&
+                    _this.settings.securityKey.length == 16) {
+                    _this.showOptions = true;
                 }
             }
             else {
-                this.showOptions = false;
+                _this.showOptions = false;
             }
         });
         $('#name').focus();
-    }
-};
+    };
+    return Bonus;
+}());
 Bonus = __decorate([
     core_1.Component({
         selector: 'dr-bonus',
-        templateUrl: 'bonus.html',
+        template: require('./bonus.html'),
     }),
     __metadata("design:paramtypes", [http_1.Http])
 ], Bonus);

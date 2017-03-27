@@ -22,6 +22,8 @@
             <li><a (click)="sendAction(60, 0)">Regalar 60'</a></li>
             <li><a *ngIf="balance > 0" (click)="sendAction(-30, -9.5)">Anular bono de 30' (€9,5)</a></li>
             <li><a *ngIf="balance > 0" (click)="sendAction(-60, -18)">Anular bono de 60' (€18)</a></li>
+            <li><a *ngIf="statements.length != 0" (click)="duplicateBonus(30, 9.5)">Duplicar bono de 30' (€9.5)</a></li>
+            <li><a *ngIf="statements.length != 0" (click)="duplicateBonus(60, 18)">Duplicar bono de 60' (€18)</a></li>
           </ul>
         </div>
         <button type="button" (click)="clearFields()" class="btn btn-default">Limpiar</button>
@@ -57,12 +59,12 @@
       </div>
     </div>
     <div *ngIf="showOptions" class="col-sm-12 col-md-offset-2 col-md-10" style="padding-left:5px">
-      <button type="button" (click)="sendAction(0, 0)" class="btn btn-primary">
+      <button *ngIf="statements.length == 0" type="button" (click)="sendAction(30, 9.5)" class="btn btn-primary" style="margin-top:5px">Bono 30' (€9,5)</button>
+      <button *ngIf="statements.length == 0" type="button" (click)="sendAction(60, 18)" class="btn btn-primary" style="margin-top:5px">Bono 60' (€18)</button>
+      <button type="button" (click)="sendAction(0, 0)" class="btn btn-primary" style="margin-top:5px">
         <span *ngIf="showOk" class="glyphicon glyphicon-ok"></span>
         Actualizar Datos
       </button>
-      <button *ngIf="statements.length == 0" type="button" (click)="sendAction(30, 9.5)" class="btn btn-primary">Bono 30' (€9,5)</button>
-      <button *ngIf="statements.length == 0" type="button" (click)="sendAction(60, 18)" class="btn btn-primary">Bono 60' (€18)</button>
     </div>
   </form>
   <div *ngIf="statements.length != 0" class="col-md-offset-2 col-md-5">

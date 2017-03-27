@@ -220,11 +220,14 @@ router.route("/users")
         })
       });
 
-router.route("/bonus/report/basic/:branch")
+router.route("/bonus/report/basic/:branch/:fromDate/:toDate")
   .get(function(req,res) {
     console.log("Report Basic Branch=" + req.params.branch);
 
     var response = {};
+
+    var fromDate = {$gte: [ "$statements.date", new Date(req.params.fromDate + "T00:00:00.0Z")]};
+    var toDate   = {$lte: [ "$statements.date", new Date(req.params.toDate   + "T23:59:59.999Z")]}
 
     mongoBonus.aggregate([
       { $match: {
@@ -233,18 +236,76 @@ router.route("/bonus/report/basic/:branch")
       { $unwind: "$statements" },
       { $group: {
         _id : "$branch",
-        minutes: { $sum: "$statements.minutes"  },
-        cash   : { $sum: "$statements.cash"}
+        minutesConsumed : {
+          $sum : {
+            $cond: {
+              if: { $and : [
+                      {$lt: [ "$statements.minutes", 0 ]},
+                      fromDate,
+                      toDate,
+                    ]
+                  },
+                  then: "$statements.minutes",
+                  else: 0
+            }
+          }
+        },
+        minutesBought : {
+          $sum : {
+            $cond: {
+              if: { $and : [
+                      {$gt: [ "$statements.minutes", 0 ]},
+                      fromDate,
+                      toDate,
+                    ]
+                  },
+                  then: "$statements.minutes",
+                  else: 0
+            }
+          }
+        },
+        cashPaid : {
+          $sum : {
+            $cond: { //2017-03-21T23:09:02.801Z
+              if: { $and : [
+                      {$gt:  [ "$statements.cash", 0 ]},
+                      fromDate,
+                      toDate,
+                    ]
+                   },
+                   then: "$statements.cash",
+                   else: 0
+            }
+          }
+        },
+        cashRefunded : {
+          $sum : {
+            $cond: {
+              if: { $and : [
+                      {$lt: [ "$statements.cash", 0 ]},
+                      fromDate,
+                      toDate,
+                    ]
+                  },
+                  then: "$statements.cash",
+                  else: 0
+            }
+          }
+        },
       }}
     ], function (err, result) {
-      var minutes = 0;
-      var cash    = 0;
+      var minutesConsumed = 0;
+      var minutesBought   = 0;
+      var cashPaid        = 0;
+      var cashRefunded    = 0;
 
       if (!err && result.length != 0) {
-        minutes = result[0].minutes;
-        cash    = result[0].cash;
+        minutesBought   =  result[0].minutesBought;
+        minutesConsumed = -result[0].minutesConsumed;
+        cashPaid        =  result[0].cashPaid;
+        cashRefunded    = -result[0].cashRefunded;
       }
-      response = {"error" : false, "register" : {minutes : minutes, cash : cash}};
+      response = {"error" : false, "register" : {cashPaid : cashPaid, cashRefunded : cashRefunded, minutesConsumed : minutesConsumed, minutesBought : minutesBought}};
       res.json(response);
     });
   });

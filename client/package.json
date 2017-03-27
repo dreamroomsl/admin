@@ -16,8 +16,8 @@
     "build:aot": "ngc -p tsconfig.aot.json && webpack --config webpack.prod.config.aot.js --progress --profile --colors",
     "preserve:dist:aot": "npm run build:aot",
     "serve:dist:aot": "static dist -H '{\"Cache-Control\": \"no-cache, must-revalidate\"}' -z",
-    "predeploy" : "npm run build",
-    "deploy" : "./deploy.sh ~/nginx/static/admin"
+    "predeploy": "npm run build",
+    "deploy": "./deploy.sh ~/nginx/static/admin"
   },
   "dependencies": {
     "@angular/common": "2.0.1",
@@ -33,6 +33,7 @@
     "@types/es6-shim": "^0.31.32",
     "bootbox": "^4.4.0",
     "bootstrap": "^3.3.7",
+    "bootstrap-datepicker": "^1.6.4",
     "crypto-js": "^3.1.9-1",
     "es6-shim": "^0.35.3",
     "file-loader": "^0.10.0",

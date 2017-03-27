@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
-import { FormGroup, FormControl, Validators } from '@angular/forms';
-import { Http } from '@angular/http';
-import { Settings, SettingsInfo } from '../settings/settings';
+import {Component} from '@angular/core';
+import {FormGroup, FormControl, Validators } from '@angular/forms';
+import {Http } from '@angular/http';
+import {Settings, SettingsInfo } from '../settings/settings';
 import * as bootbox from 'bootbox';
 import * as app     from '../app'
 import 'rxjs/add/operator/map';
@@ -87,8 +87,20 @@ export class Bonus {
         this.searchBonus();
       }
     });
-
   }
+
+  duplicateBonus(minutes : number, cash : number) {
+    this.http.get(app.nodejsServer + '/nextbonus/' + this.settings.branch)
+    .map(response => response.json())
+    .subscribe(response => {
+        this.formModel.patchValue({
+          ticketId    : response.next,
+        });
+        this.statements  = [];
+        this.sendAction(minutes, cash);
+    });
+  }
+
 
   clearFields() {
     this.formModel.reset();
