@@ -19,6 +19,12 @@ app.use(function (req, res, next) {
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
 });
+var branches = {
+    '001': '8234286739828739',
+    '002': '6393475043057839',
+    '003': '8712921745988852',
+    '999': '3057839563934999'
+};
 router.route("/users")
     .get(function (req, res) {
     var response = {};
@@ -68,23 +74,28 @@ router.route("/bonus")
         if (!err && data != null) {
             bonus = data;
         }
-        var key = CryptoJS.enc.Utf8.parse('3057839563934' + req.body.branch);
-        var iv = CryptoJS.enc.Utf8.parse('3057839563934' + req.body.branch);
-        var decrypted = CryptoJS.AES.decrypt(req.body.securityToken, key, {
-            keySize: 128 / 8,
-            iv: iv,
-            mode: CryptoJS.mode.CBC,
-            padding: CryptoJS.pad.Pkcs7
-        });
+        var branchKey = branches[req.body.branch];
+        var decrypted = '';
+        if (branchKey != undefined) {
+            var key = CryptoJS.enc.Utf8.parse(branchKey);
+            var iv = CryptoJS.enc.Utf8.parse(branchKey);
+            var decryptedTmp = CryptoJS.AES.decrypt(req.body.securityToken, key, {
+                keySize: 128 / 8,
+                iv: iv,
+                mode: CryptoJS.mode.CBC,
+                padding: CryptoJS.pad.Pkcs7
+            });
+            decrypted = decryptedTmp.toString(CryptoJS.enc.Utf8);
+        }
         console.log('SecurityToken=' + req.body.securityToken);
-        console.log('Decrypted=' + decrypted.toString(CryptoJS.enc.Utf8));
+        console.log('Decrypted=' + decrypted);
         var totalStatements = 0;
         if (bonus.statements != undefined) {
             totalStatements = bonus.statements.length;
         }
         var resultExpected = req.body.ticketId + req.body.branch + totalStatements;
         console.log('resultExpected=' + resultExpected);
-        if (decrypted.toString(CryptoJS.enc.Utf8) == resultExpected) {
+        if (decrypted == resultExpected) {
             console.log('OK');
             bonus.telephone = req.body.telephone;
             bonus.name = req.body.name;

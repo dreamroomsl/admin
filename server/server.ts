@@ -36,6 +36,12 @@ app.use(function(req, res, next) {
   next();
 });
 
+var branches = {
+  '001' : '8234286739828739',
+  '002' : '6393475043057839',
+  '003' : '8712921745988852',
+  '999' : '3057839563934999'
+}
 // USERS
 router.route("/users")
   .get(function(req,res) {
@@ -91,19 +97,25 @@ router.route("/users")
           bonus = data;
         }
 
-        let key = CryptoJS.enc.Utf8.parse('3057839563934' + req.body.branch);
-        let iv  = CryptoJS.enc.Utf8.parse('3057839563934' + req.body.branch);
+        let branchKey = branches[req.body.branch];
+        let decrypted = '';
 
-        var decrypted = CryptoJS.AES.decrypt(req.body.securityToken, key,
-                        {
-                            keySize: 128 / 8,
-                            iv: iv,
-                            mode: CryptoJS.mode.CBC,
-                            padding: CryptoJS.pad.Pkcs7
-                        });
+        if (branchKey != undefined) {
+          let key = CryptoJS.enc.Utf8.parse(branchKey);
+          let iv  = CryptoJS.enc.Utf8.parse(branchKey);
 
+          var decryptedTmp = CryptoJS.AES.decrypt(req.body.securityToken, key,
+                          {
+                              keySize: 128 / 8,
+                              iv: iv,
+                              mode: CryptoJS.mode.CBC,
+                              padding: CryptoJS.pad.Pkcs7
+                          });
+
+            decrypted = decryptedTmp.toString(CryptoJS.enc.Utf8)
+          }
         console.log('SecurityToken=' + req.body.securityToken);
-        console.log('Decrypted=' + decrypted.toString(CryptoJS.enc.Utf8));
+        console.log('Decrypted=' + decrypted);
 
         let totalStatements = 0;
 
@@ -114,7 +126,7 @@ router.route("/users")
         let resultExpected = req.body.ticketId + req.body.branch + totalStatements;
         console.log('resultExpected=' + resultExpected);
 
-        if (decrypted.toString(CryptoJS.enc.Utf8) == resultExpected) {
+        if (decrypted == resultExpected) {
           console.log('OK');
           bonus.telephone    = req.body.telephone;
           bonus.name         = req.body.name;
@@ -236,7 +248,7 @@ router.route("/bonus/report/basic/:branch/:fromDate/:toDate")
 
     console.log('mongodbFromDate=' + mongodbFromDate);
     console.log('mongodbtoDate  =' + mongodbToDate);
-    
+
     mongoBonus.aggregate([
       { $match: {
         branch   : req.params.branch,
