@@ -1,0 +1,52 @@
+<html>
+<head>
+    <title>Dream Room Screen Saver</title>
+</head>
+  <body onload="onload();">
+    <video muted id="idle_video" width="1280" height="720" onended="onVideoEnded();"></video>
+    <script>
+        var video_list      = ["file:///C:/Users/PlayerOne/Documents/Videos%20Tablet/Experiencias/DreamDesk%20Trailer.mp4",
+                               "file:///C:/Users/PlayerOne/Documents/Videos%20Tablet/Experiencias/Rusa.mp4",
+                               "file:///C:/Users/PlayerOne/Documents/Videos%20Tablet/Experiencias/Senza%20peso%20Trailer.mp4",
+                               "file:///C:/Users/PlayerOne/Documents/Videos%20Tablet/Experiencias/TheBlu%20Trailer.mp4",
+                               "file:///C:/Users/PlayerOne/Documents/Videos%20Tablet/Infantiles/Henry.mp4",
+                               "file:///C:/Users/PlayerOne/Documents/Videos%20Tablet/Infantiles/Invasion.mp4",
+                               "file:///C:/Users/PlayerOne/Documents/Videos%20Tablet/Interactivos/BulletTrain%20Trailer.mp4",
+                               "file:///C:/Users/PlayerOne/Documents/Videos%20Tablet/Interactivos/FirstContact%20Trailer.mp4",
+                               "file:///C:/Users/PlayerOne/Documents/Videos%20Tablet/Juegos/Arizona%20Trailer.mp4",
+                               "file:///C:/Users/PlayerOne/Documents/Videos%20Tablet/Juegos/DCS.mp4",
+                               "file:///C:/Users/PlayerOne/Documents/Videos%20Tablet/Juegos/FruitNinja.mp4",
+                               "file:///C:/Users/PlayerOne/Documents/Videos%20Tablet/Juegos/GunJack%20Trailer.mp4",
+                               "file:///C:/Users/PlayerOne/Documents/Videos%20Tablet/Juegos/Luckys%20Tale%20Trailer.mp4",
+                               "file:///C:/Users/PlayerOne/Documents/Videos%20Tablet/Juegos/MentalTorment%20Trailer.mp4",
+                               "file:///C:/Users/PlayerOne/Documents/Videos%20Tablet/Juegos/Minecraft.mp4",
+                               "file:///C:/Users/PlayerOne/Documents/Videos%20Tablet/Juegos/PC.mp4",
+                               "file:///C:/Users/PlayerOne/Documents/Videos%20Tablet/Juegos/SeriusSam%20Trailer.mp4",
+                               "file:///C:/Users/PlayerOne/Documents/Videos%20Tablet/Juegos/SuperHOT.mp4",
+                               "file:///C:/Users/PlayerOne/Documents/Videos%20Tablet/Juegos/VRFunHouse.mp4",
+                               "file:///C:/Users/PlayerOne/Documents/Videos%20Tablet/Juegos/Zombies.mp4",
+                              ];
+        var video_index     = 0;
+        var video_player    = null;
+
+        function onload(){
+            console.log("body loaded");
+            video_player        = document.getElementById("idle_video");
+            video_player.setAttribute("src", video_list[video_index]);
+            video_player.play();
+        }
+
+        function onVideoEnded(){
+            console.log("video ended");
+            if(video_index < video_list.length - 1){
+                video_index++;
+            }
+            else{
+                video_index = 0;
+            }
+            video_player.setAttribute("src", video_list[video_index]);
+            video_player.play();
+        }
+    </script>
+ </body>
+</html>
