@@ -14,6 +14,7 @@
             Otras Opciones <span class="caret"></span>
           </button>
           <ul class="dropdown-menu" role="menu">
+            <li><a (click)="sendAction( 5, 0)">Regalar 5'</a></li>
             <li><a (click)="sendAction(10, 0)">Regalar 10'</a></li>
             <li><a (click)="sendAction(20, 0)">Regalar 20'</a></li>
             <li><a (click)="sendAction(30, 0)">Regalar 30'</a></li>
@@ -30,6 +31,7 @@
       </div>
     </div>
     <div *ngIf="showOptions" class="col-sm-12 col-md-offset-2 col-md-10" style="padding-left:5px">
+      <button *ngIf="balance >=  5" type="button" (click)="sendAction( -5, 0)" class="btn btn-primary">5'</button>
       <button *ngIf="balance >= 10" type="button" (click)="sendAction(-10, 0)" class="btn btn-primary">10'</button>
       <button *ngIf="balance >= 20" type="button" (click)="sendAction(-20, 0)" class="btn btn-primary">20'</button>
       <button *ngIf="balance >= 30" type="button" (click)="sendAction(-30, 0)" class="btn btn-primary">30'</button>

@@ -17,6 +17,7 @@ public class ScreenSaver implements NativeMouseInputListener {
 	private static long 	startTime 	= 0;
 	private static boolean 	isActive 	= false;
 	private static Robot 	robot;
+	private static Boolean  mutex       = new Boolean(true);
 
 	
 	public static void resetTimer() {
@@ -24,25 +25,22 @@ public class ScreenSaver implements NativeMouseInputListener {
 	}
 	
 	public void nativeMouseClicked(NativeMouseEvent e) {
-		if (isActive) {
-			resetTimer();
-			robot.keyPress(KeyEvent.VK_ALT);
-			robot.keyPress(KeyEvent.VK_F4);
-			robot.keyRelease(KeyEvent.VK_F4);
-			robot.keyRelease(KeyEvent.VK_ALT);
-			/*
-			robot.keyPress(KeyEvent.VK_META);
-			robot.keyPress(KeyEvent.VK_Q);
-			robot.keyRelease(KeyEvent.VK_META);
-			robot.keyRelease(KeyEvent.VK_Q);
-			*/
-			isActive = false;
-		}
-		System.out.println("X=" + e.getX() + ", Y=" + e.getY());
-		if (e.getX() <= 10 && e.getY() <= 10) {
-			startTime = 0;
-		} else {
-			resetTimer();
+		synchronized(mutex) {
+			if (isActive) {
+				resetTimer();
+				robot.keyPress(KeyEvent.VK_ALT);
+				robot.keyPress(KeyEvent.VK_F4);
+				robot.keyRelease(KeyEvent.VK_F4);
+				robot.keyRelease(KeyEvent.VK_ALT);
+				isActive = false;
+			}
+			System.out.println("X=" + e.getX() + ", Y=" + e.getY());
+			if (e.getX() <= 10 && e.getY() <= 10) {
+				startTime = 0;
+				isActive = false;
+			} else {
+				resetTimer();
+			}
 		}
 	}
 
@@ -92,32 +90,23 @@ public class ScreenSaver implements NativeMouseInputListener {
 		try {
 			while (true) {
 				Thread.currentThread().sleep(100);
-				
-				if (!isActive) {
-					long now = (new Date()).getTime();
-					
-					if ((now - startTime) > timeout * 1000) {
-						isActive = true;
-						System.out.println("TimeOut Expired");
-						ProcessBuilder processBuilder = new ProcessBuilder("LaunchBrowser.bat");
-						//ProcessBuilder processBuilder = new ProcessBuilder("./LaunchBrowser.sh");
-
-						Process runningProcess = processBuilder.start();
-
-						Thread.currentThread().sleep(1000);
-
-						robot.keyPress(KeyEvent.VK_F11);
+				synchronized(mutex) {
+					if (!isActive) {
+						long now = (new Date()).getTime();
 						
-						robot.keyRelease(KeyEvent.VK_F11);
-						/*
-						robot.keyPress(KeyEvent.VK_CONTROL);
-						robot.keyPress(KeyEvent.VK_META);
-						robot.keyPress(KeyEvent.VK_F);
-						
-						robot.keyRelease(KeyEvent.VK_CONTROL);
-						robot.keyRelease(KeyEvent.VK_META);
-						robot.keyRelease(KeyEvent.VK_F);
-						*/
+						if ((now - startTime) > timeout * 1000) {
+							isActive = true;
+							System.out.println("TimeOut Expired");
+							ProcessBuilder processBuilder = new ProcessBuilder("LaunchBrowser.bat");
+	
+							Process runningProcess = processBuilder.start();
+	
+							Thread.currentThread().sleep(1000);
+	
+							robot.keyPress(KeyEvent.VK_F11);
+							
+							robot.keyRelease(KeyEvent.VK_F11);
+						}
 					}
 				}
 			}
