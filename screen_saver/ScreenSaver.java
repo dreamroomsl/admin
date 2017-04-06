@@ -28,10 +28,21 @@ public class ScreenSaver implements NativeMouseInputListener {
 		synchronized(mutex) {
 			if (isActive) {
 				resetTimer();
+				/*
 				robot.keyPress(KeyEvent.VK_ALT);
 				robot.keyPress(KeyEvent.VK_F4);
 				robot.keyRelease(KeyEvent.VK_F4);
 				robot.keyRelease(KeyEvent.VK_ALT);
+				*/
+				System.out.println("Killing browser");
+				try {
+					ProcessBuilder processBuilder = new ProcessBuilder("KillBrowser.bat");
+				
+					processBuilder.start();
+				} catch(Exception ex) {
+					System.out.println("Error killing browser");
+				}
+
 				isActive = false;
 			}
 			System.out.println("X=" + e.getX() + ", Y=" + e.getY());
@@ -99,10 +110,15 @@ public class ScreenSaver implements NativeMouseInputListener {
 						if ((now - startTime) > timeout * 1000) {
 							isActive = true;
 							System.out.println("TimeOut Expired");
-							ProcessBuilder processBuilder = new ProcessBuilder("LaunchBrowser.bat");
+							
+							try {
+								ProcessBuilder processBuilder = new ProcessBuilder("LaunchBrowser.bat");
 	
-							Process runningProcess = processBuilder.start();
-	
+								processBuilder.start();
+							} catch(Exception ex) {
+								System.out.println("Launching browser");
+							}
+							
 							Thread.currentThread().sleep(1000);
 	
 							robot.keyPress(KeyEvent.VK_F11);
