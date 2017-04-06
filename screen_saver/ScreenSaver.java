@@ -51,7 +51,9 @@ public class ScreenSaver implements NativeMouseInputListener {
 	}
 
 	public void nativeMouseMoved(NativeMouseEvent e) {
-		resetTimer();
+		if (e.getX() > 10 && e.getY() > 10) {
+			resetTimer();
+		}
 	}
 
 	public void nativeMouseDragged(NativeMouseEvent e) {
