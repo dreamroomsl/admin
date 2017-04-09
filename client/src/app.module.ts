@@ -10,6 +10,7 @@ import { MyApp } from './app/app';
 import { Settings } from './app/settings/settings';
 import { Bonus } from './app/bonus/bonus';
 import { Reports } from './app/reports/reports';
+import { Timers } from './app/timers/timers';
 import { Home } from './app/home/home';
 
 @NgModule({
@@ -17,7 +18,7 @@ import { Home } from './app/home/home';
   providers: [
       { provide: LOCALE_ID, useValue: "es-ES" }
   ],
-  declarations: [ MyApp, Home, Bonus, Settings, Reports ],
+  declarations: [ MyApp, Home, Bonus, Settings, Reports, Timers ],
   bootstrap: [ MyApp ]
 })
 export class AppModule {}

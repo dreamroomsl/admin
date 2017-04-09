@@ -6,7 +6,7 @@
     "noEmit": false,
     "sourceMap": false,
     "outDir": "build-js",
-    "target": "es5"
+    "target": "es6"
   },
   "files": [
     "src/main.ts",

@@ -5,8 +5,9 @@ import 'rxjs/add/operator/map';
 import * as CryptoJS from 'crypto-js';
 
 export interface SettingsInfo {
-  branch?      : string,
-  securityKey? : string,
+  branch?         : string,
+  securityKey?    : string,
+  workstations?   : number,
 }
 
 @Component({
@@ -25,8 +26,9 @@ export class Settings {
 
   constructor(private http: Http) {
     this.formModel = new FormGroup({
-      'branch'      : new FormControl(),
-      'securityKey' : new FormControl(),
+      'branch'        : new FormControl(),
+      'securityKey'   : new FormControl(),
+      'workstations'  : new FormControl(),
     });
 
     this.refreshData();
@@ -34,14 +36,14 @@ export class Settings {
 
   refreshData() {
     let settings = Settings.get();
+
     if (settings != undefined && settings.branch != undefined) {
       this.formModel.patchValue({
-        branch      : settings.branch,
-        securityKey : settings.securityKey == undefined ? '' : '****************',
+        branch        : settings.branch,
+        securityKey   : settings.securityKey == undefined ? '' : '****************',
+        workstations  : "" + ((settings.workstations == undefined) ? 0 : settings.workstations),
       });
     }
-    
-
   }
 
   onSubmit() {
@@ -49,13 +51,12 @@ export class Settings {
 
     let securityKey = this.formModel.value.securityKey;
 
-    if (securityKey.charAt(0) != '*') {
-      let settings = {
-        branch      : this.formModel.value.branch,
-        securityKey : this.formModel.value.securityKey,
-      };
-      localStorage.setItem("settings", JSON.stringify(settings));
-      this.refreshData();
-    }
+    let settings = {
+      branch        : this.formModel.value.branch,
+      securityKey   : securityKey.charAt(0) == '*' ? Settings.get().securityKey : this.formModel.value.securityKey,
+      workstations  : parseInt(this.formModel.value.workstations),
+    };
+    localStorage.setItem("settings", JSON.stringify(settings));
+    this.refreshData();
   }
 }

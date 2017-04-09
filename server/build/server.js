@@ -1,6 +1,7 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
-var CryptoJS = require("crypto-js");
+const CryptoJS = require("crypto-js");
+const ws_1 = require("ws");
 var express = require("express");
 var bodyParser = require("body-parser");
 var mongoose = require("mongoose");
@@ -74,11 +75,11 @@ router.route("/bonus")
         if (!err && data != null) {
             bonus = data;
         }
-        var branchKey = branches[req.body.branch];
-        var decrypted = '';
+        let branchKey = branches[req.body.branch];
+        let decrypted = '';
         if (branchKey != undefined) {
-            var key = CryptoJS.enc.Utf8.parse(branchKey);
-            var iv = CryptoJS.enc.Utf8.parse(branchKey);
+            let key = CryptoJS.enc.Utf8.parse(branchKey);
+            let iv = CryptoJS.enc.Utf8.parse(branchKey);
             var decryptedTmp = CryptoJS.AES.decrypt(req.body.securityToken, key, {
                 keySize: 128 / 8,
                 iv: iv,
@@ -89,11 +90,11 @@ router.route("/bonus")
         }
         console.log('SecurityToken=' + req.body.securityToken);
         console.log('Decrypted=' + decrypted);
-        var totalStatements = 0;
+        let totalStatements = 0;
         if (bonus.statements != undefined) {
             totalStatements = bonus.statements.length;
         }
-        var resultExpected = req.body.ticketId + req.body.branch + totalStatements;
+        let resultExpected = req.body.ticketId + req.body.branch + totalStatements;
         console.log('resultExpected=' + resultExpected);
         if (decrypted == resultExpected) {
             console.log('OK');
@@ -190,7 +191,7 @@ router.route("/bonus/:branch/:ticketId")
                 if (!err && result.length != 0) {
                     balance = result[0].balance;
                 }
-                response = { "error": false, "register": { data: data, balance: balance } };
+                response = { "error": false, "register": { data, balance: balance } };
                 res.json(response);
             });
         }
@@ -287,5 +288,69 @@ router.route("/bonus/report/basic/:branch/:fromDate/:toDate")
     });
 });
 app.use('/', router);
-app.listen(3000);
-console.log("Listening to PORT 3000");
+const httpServer = app.listen(3000, 'localhost', () => {
+    const { address, port } = httpServer.address();
+    console.log('Listening on %s:%s', address, port);
+});
+const wsServer = new ws_1.Server({ server: httpServer });
+var timers = new Map();
+wsServer.on('connection', ws => {
+    console.log("Timer Connected");
+    let webSocket = ws;
+    ws.on('message', message => {
+        console.log("Timer (branch,id):" + message);
+        let parameters = message.split(' ');
+        let branch = parameters[0];
+        let timer = parameters[1];
+        timers.set(branch + '-' + timer, ws);
+    });
+    ws.on('close', () => {
+        console.log("Close Socket");
+        timers.forEach((value, key, map) => {
+            if (value == webSocket) {
+                timers.delete(key);
+            }
+        });
+    });
+});
+router.route("/timers/:branch")
+    .get(function (req, res) {
+    var response = {};
+    var data = new Array();
+    var branch = req.params.branch;
+    timers.forEach((value, key, map) => {
+        if (key.startsWith(branch)) {
+            data.push(key.split('-')[1]);
+        }
+    });
+    response = { "error": false, "timers": JSON.parse(JSON.stringify(data)) };
+    res.json(response);
+});
+router.route("/timer/:branch/:timer?")
+    .put(function (req, res) {
+    var response = {};
+    try {
+        var branch = req.params.branch;
+        var timer = req.params.timer;
+        var action = req.query.action;
+        var socket = undefined;
+        socket = timers.get(branch + '-' + timer);
+        if (action == 'start') {
+            socket.send('start ' + req.query.seconds);
+        }
+        else if (action == 'stop') {
+            socket.send('stop');
+        }
+        else if (action == 'pause') {
+            socket.send('pause');
+        }
+        else if (action == 'resume') {
+            socket.send('resume');
+        }
+    }
+    catch (exception) {
+        socket = undefined;
+    }
+    response = { "error": socket == undefined };
+    res.json(response);
+});

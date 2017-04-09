@@ -10,6 +10,8 @@ Starting client (if needed)
 ./mongo
 */
 import * as CryptoJS from 'crypto-js';
+import {Server as HttpServer} from 'http';
+import {Server as WsServer}   from 'ws';
 
 var express    = require("express");
 var bodyParser = require("body-parser");
@@ -72,165 +74,165 @@ router.route("/users")
     });
   });
 
-  router.route("/bonus")
+router.route("/bonus")
+  .get(function(req,res){
+    var response = {};
+    mongoBonus.find({},function(err,data){
+      if (err || data == null) {
+        response = {"error" : true, "message" : "Error fetching data"};
+      } else {
+        response = {"error" : false, "register" : data};
+      }
+      res.json(response);
+    })
+  })
+  .post(function(req,res){
+
+    var response = {};
+    var bonus    = new mongoBonus();
+
+    console.log("ticketId=" + req.body.ticketId);
+
+    mongoBonus.findOne({ticketId:req.body.ticketId, branch:req.body.branch},function(err,data){
+
+      if (!err && data != null) {
+        bonus = data;
+      }
+
+      let branchKey = branches[req.body.branch];
+      let decrypted = '';
+
+      if (branchKey != undefined) {
+        let key = CryptoJS.enc.Utf8.parse(branchKey);
+        let iv  = CryptoJS.enc.Utf8.parse(branchKey);
+
+        var decryptedTmp = CryptoJS.AES.decrypt(req.body.securityToken, key,
+                        {
+                            keySize: 128 / 8,
+                            iv: iv,
+                            mode: CryptoJS.mode.CBC,
+                            padding: CryptoJS.pad.Pkcs7
+                        });
+
+          decrypted = decryptedTmp.toString(CryptoJS.enc.Utf8)
+        }
+      console.log('SecurityToken=' + req.body.securityToken);
+      console.log('Decrypted=' + decrypted);
+
+      let totalStatements = 0;
+
+      if (bonus.statements != undefined) {
+        totalStatements = bonus.statements.length;
+      }
+
+      let resultExpected = req.body.ticketId + req.body.branch + totalStatements;
+      console.log('resultExpected=' + resultExpected);
+
+      if (decrypted == resultExpected) {
+        console.log('OK');
+        bonus.telephone    = req.body.telephone;
+        bonus.name         = req.body.name;
+        bonus.ticketId     = req.body.ticketId;
+        bonus.branch       = req.body.branch;
+
+        if (req.body.cash != undefined && req.body.cash != 0) {
+          bonus.statements.push({cash:req.body.cash});
+        }
+        if (req.body.minutes != undefined && req.body.minutes != 0) {
+          bonus.statements.push({minutes:req.body.minutes});
+        }
+
+        bonus.save(function(err){
+          if (err) {
+            response = {"error" : true, "message" : "Error actualizando datos"};
+          } else {
+            response = {"error" : false, "message" : "Datos modificados"};
+          }
+          res.json(response);
+        });
+      } else {
+        console.log('ERROR!');
+
+        response = {"error" : true, "message" : "Error en el token de seguridad. Revisar oficina y clave de seguridad."};
+        res.json(response);
+      }
+    })
+  });
+
+  router.route("/nextbonus/:branch")
     .get(function(req,res){
       var response = {};
-      mongoBonus.find({},function(err,data){
+      mongoBonus.findOne({branch:req.params.branch}).sort('-ticketId').exec(function(err,data){
         if (err || data == null) {
-          response = {"error" : true, "message" : "Error fetching data"};
+          response = {"error" : false, "next" : "1"};
         } else {
-          response = {"error" : false, "register" : data};
+          response = {"error" : false, "next" : "" + (Number(data.ticketId) + 1)};
         }
         res.json(response);
       })
     })
-    .post(function(req,res){
 
-      var response = {};
-      var bonus    = new mongoBonus();
+router.route("/bonusbyname/:branch/:name")
+  .get(function(req,res){
+    var response = {};
+    mongoBonus.find({branch:req.params.branch, name : new RegExp(req.params.name,'i')}).sort('-ticketId').exec(function(err,data){
+      if (err || data == null) {
+        response = {"error" : true, "message" : "Registro no encontrado"};
+      } else {
+        response = {"error" : false, "register" : data};
+      }
+      res.json(response);
+    })
+  })
 
-      console.log("ticketId=" + req.body.ticketId);
+router.route("/bonusbytelephone/:branch/:telephone")
+  .get(function(req,res){
+    var response = {};
+    mongoBonus.find({branch:req.params.branch, telephone : new RegExp(req.params.telephone,'i')}).sort('-ticketId').exec(function(err,data){
+      if (err || data == null) {
+        response = {"error" : true, "message" : "Registro no encontrado"};
+      } else {
+        response = {"error" : false, "register" : data};
+      }
+      res.json(response);
+    })
+  })
 
-      mongoBonus.findOne({ticketId:req.body.ticketId, branch:req.body.branch},function(err,data){
+router.route("/bonus/:branch/:ticketId")
+  .get(function(req,res){
 
-        if (!err && data != null) {
-          bonus = data;
-        }
+    console.log("branch=" + req.params.branch + ",ticketId=" + req.params.ticketId);
 
-        let branchKey = branches[req.body.branch];
-        let decrypted = '';
+    var response = {};
+    mongoBonus.findOne({ticketId:Number(req.params.ticketId), branch:req.params.branch},function(err,data){
+      if (err || data == null) {
+        response = {"error" : true, "message" : "Registro no encontrado"};
+        res.json(response);
+      } else {
+        mongoBonus.aggregate([
+          { $match: {
+            ticketId: Number(req.params.ticketId),
+          }},
+          { $match: {
+            branch   : req.params.branch,
+          }},
+          { $unwind: "$statements" },
+          { $group: {
+            _id : "$ticketId",
+            balance: { $sum: "$statements.minutes"  }
+          }}
+        ], function (err, result) {
+          var balance = 0;
 
-        if (branchKey != undefined) {
-          let key = CryptoJS.enc.Utf8.parse(branchKey);
-          let iv  = CryptoJS.enc.Utf8.parse(branchKey);
-
-          var decryptedTmp = CryptoJS.AES.decrypt(req.body.securityToken, key,
-                          {
-                              keySize: 128 / 8,
-                              iv: iv,
-                              mode: CryptoJS.mode.CBC,
-                              padding: CryptoJS.pad.Pkcs7
-                          });
-
-            decrypted = decryptedTmp.toString(CryptoJS.enc.Utf8)
+          if (!err && result.length != 0) {
+            balance = result[0].balance;
           }
-        console.log('SecurityToken=' + req.body.securityToken);
-        console.log('Decrypted=' + decrypted);
-
-        let totalStatements = 0;
-
-        if (bonus.statements != undefined) {
-          totalStatements = bonus.statements.length;
-        }
-
-        let resultExpected = req.body.ticketId + req.body.branch + totalStatements;
-        console.log('resultExpected=' + resultExpected);
-
-        if (decrypted == resultExpected) {
-          console.log('OK');
-          bonus.telephone    = req.body.telephone;
-          bonus.name         = req.body.name;
-          bonus.ticketId     = req.body.ticketId;
-          bonus.branch       = req.body.branch;
-
-          if (req.body.cash != undefined && req.body.cash != 0) {
-            bonus.statements.push({cash:req.body.cash});
-          }
-          if (req.body.minutes != undefined && req.body.minutes != 0) {
-            bonus.statements.push({minutes:req.body.minutes});
-          }
-
-          bonus.save(function(err){
-            if (err) {
-              response = {"error" : true, "message" : "Error actualizando datos"};
-            } else {
-              response = {"error" : false, "message" : "Datos modificados"};
-            }
-            res.json(response);
-          });
-        } else {
-          console.log('ERROR!');
-
-          response = {"error" : true, "message" : "Error en el token de seguridad. Revisar oficina y clave de seguridad."};
+          response = {"error" : false, "register" : {data, balance : balance}};
           res.json(response);
-        }
-      })
-    });
-
-    router.route("/nextbonus/:branch")
-      .get(function(req,res){
-        var response = {};
-        mongoBonus.findOne({branch:req.params.branch}).sort('-ticketId').exec(function(err,data){
-          if (err || data == null) {
-            response = {"error" : false, "next" : "1"};
-          } else {
-            response = {"error" : false, "next" : "" + (Number(data.ticketId) + 1)};
-          }
-          res.json(response);
-        })
-      })
-
-    router.route("/bonusbyname/:branch/:name")
-      .get(function(req,res){
-        var response = {};
-        mongoBonus.find({branch:req.params.branch, name : new RegExp(req.params.name,'i')}).sort('-ticketId').exec(function(err,data){
-          if (err || data == null) {
-            response = {"error" : true, "message" : "Registro no encontrado"};
-          } else {
-            response = {"error" : false, "register" : data};
-          }
-          res.json(response);
-        })
-      })
-
-      router.route("/bonusbytelephone/:branch/:telephone")
-        .get(function(req,res){
-          var response = {};
-          mongoBonus.find({branch:req.params.branch, telephone : new RegExp(req.params.telephone,'i')}).sort('-ticketId').exec(function(err,data){
-            if (err || data == null) {
-              response = {"error" : true, "message" : "Registro no encontrado"};
-            } else {
-              response = {"error" : false, "register" : data};
-            }
-            res.json(response);
-          })
-        })
-
-    router.route("/bonus/:branch/:ticketId")
-      .get(function(req,res){
-
-        console.log("branch=" + req.params.branch + ",ticketId=" + req.params.ticketId);
-
-        var response = {};
-        mongoBonus.findOne({ticketId:Number(req.params.ticketId), branch:req.params.branch},function(err,data){
-          if (err || data == null) {
-            response = {"error" : true, "message" : "Registro no encontrado"};
-            res.json(response);
-          } else {
-            mongoBonus.aggregate([
-              { $match: {
-                ticketId: Number(req.params.ticketId),
-              }},
-              { $match: {
-                branch   : req.params.branch,
-              }},
-              { $unwind: "$statements" },
-              { $group: {
-                _id : "$ticketId",
-                balance: { $sum: "$statements.minutes"  }
-              }}
-            ], function (err, result) {
-              var balance = 0;
-
-              if (!err && result.length != 0) {
-                balance = result[0].balance;
-              }
-              response = {"error" : false, "register" : {data, balance : balance}};
-              res.json(response);
-            });
-          }
-        })
-      });
+        });
+      }
+    })
+  });
 
 router.route("/bonus/report/basic/:branch/:fromDate/:toDate")
   .get(function(req,res) {
@@ -332,6 +334,85 @@ router.route("/bonus/report/basic/:branch/:fromDate/:toDate")
 
 app.use('/',router);
 
-//app.listen(3000, '192.168.1.35');
-app.listen(3000);
-console.log("Listening to PORT 3000");
+//app.listen(3000);
+//console.log("Listening to PORT 3000");
+
+const httpServer: HttpServer = app.listen(3000, 'localhost', () => {
+  const {address, port} = httpServer.address();
+
+  console.log('Listening on %s:%s', address, port);
+});
+
+const wsServer: WsServer = new WsServer({server: httpServer});
+
+var timers = new Map<string, any>();
+
+wsServer.on('connection', ws => {
+  console.log("Timer Connected");
+
+  let webSocket = ws;
+
+  ws.on('message', message => {
+    console.log("Timer (branch,id):" + message);
+
+    let parameters = message.split(' ');
+    let branch = parameters[0];
+    let timer  = parameters[1];
+
+    timers.set(branch + '-' + timer, ws);
+  });
+  ws.on('close', () => {
+    console.log("Close Socket");
+
+    timers.forEach((value, key, map) => {
+      if (value == webSocket) {
+        timers.delete(key);
+      }
+    });
+
+  });
+});
+
+router.route("/timers/:branch")
+  .get(function(req,res){
+    var response = {};
+    var data     = new Array();
+    var branch   = req.params.branch;
+
+    timers.forEach((value, key, map) => {
+      if (key.startsWith(branch)) {
+        data.push(key.split('-')[1]);
+      }
+    });
+
+    response = {"error" : false, "timers" : JSON.parse(JSON.stringify(data))};
+    res.json(response);
+  })
+
+  router.route("/timer/:branch/:timer?")
+    .put(function(req,res){
+      var response = {};
+      try {
+        var branch   = req.params.branch;
+        var timer    = req.params.timer;
+        var action   = req.query.action;
+        var socket   = undefined;
+
+        socket = timers.get(branch + '-' + timer);
+
+        if (action == 'start') {
+          socket.send('start ' + req.query.seconds);
+        } else if (action == 'stop') {
+          socket.send('stop');
+        } else if (action == 'pause') {
+          socket.send('pause');
+        } else if (action == 'resume') {
+          socket.send('resume');
+        }
+      } catch (exception) {
+        socket = undefined;
+      }
+
+      response = {"error" : socket == undefined};
+      res.json(response);
+    })

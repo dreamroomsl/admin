@@ -1,0 +1,43 @@
+<div>
+  <div *ngIf="timers.length != 0" class="col-md-12">
+    <div *ngFor="let timer of timers" style="margin:10px">
+      <div class="btn-group" role="group" aria-label="...">
+        <button *ngIf="timer.installed"  id="timer{{timer.id}}" type="button" class="btn btn-primary"><span class="badge">{{timer.id}}</span></button>
+        <button *ngIf="!timer.installed" id="timer{{timer.id}}" type="button" class="btn btn-danger" ><span class="badge">{{timer.id}}</span></button>
+        <div class="btn-group" role="group">
+          <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <span class="glyphicon glyphicon glyphicon-play"></span>
+            <span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu">
+            <li><a (click)="executeAction(timer.id, 'start',  5)">5'</a></li>
+            <li><a (click)="executeAction(timer.id, 'start', 10)">10'</a></li>
+            <li><a (click)="executeAction(timer.id, 'start', 15)">15'</a></li>
+            <li><a (click)="executeAction(timer.id, 'start', 20)">20'</a></li>
+            <li><a (click)="executeAction(timer.id, 'start', 25)">25'</a></li>
+            <li><a (click)="executeAction(timer.id, 'start', 30)">30'</a></li>
+            <li><a (click)="executeAction(timer.id, 'start', 35)">35'</a></li>
+            <li><a (click)="executeAction(timer.id, 'start', 40)">40'</a></li>
+            <li><a (click)="executeAction(timer.id, 'start', 45)">45'</a></li>
+            <li><a (click)="executeAction(timer.id, 'start', 50)">50'</a></li>
+            <li><a (click)="executeAction(timer.id, 'start', 55)">55'</a></li>
+            <li><a (click)="executeAction(timer.id, 'start', 60)">60'</a></li>
+          </ul>
+        </div>
+        <button (click)="executeAction(timer.id, 'pause',  0)" type="button" class="btn btn-default">
+          <span class="glyphicon glyphicon-pause"></span>
+        </button>
+        <button (click)="executeAction(timer.id, 'resume',  0)" type="button" class="btn btn-default">
+          <span class="glyphicon glyphicon-step-forward"></span>
+        </button>
+        <button (click)="executeAction(timer.id, 'stop',  0)" type="button" class="btn btn-default">
+          <span class="glyphicon glyphicon-stop"></span>
+        </button>
+        <button id="counterbutton{{timer.id}}" type="button" class="btn btn-default">
+          <span id="counter{{timer.id}}">·</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
