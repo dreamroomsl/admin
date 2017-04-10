@@ -298,11 +298,26 @@ wsServer.on('connection', ws => {
     console.log("Timer Connected");
     let webSocket = ws;
     ws.on('message', message => {
-        console.log("Timer (branch,id):" + message);
+        console.log("Timer message: " + message);
         let parameters = message.split(' ');
-        let branch = parameters[0];
-        let timer = parameters[1];
-        timers.set(branch + '-' + timer, ws);
+        let command = parameters[0];
+        if (command == 'initialize') {
+            let branch = parameters[1];
+            let timer = parameters[2];
+            timers.set(branch + '-' + timer, ws);
+        }
+        else if (command == 'timeout') {
+            timers.forEach((value, key, map) => {
+                if (value == webSocket) {
+                    let branch = key.split('-')[0];
+                    let timer = key.split('-')[1];
+                    let timerMaster = timers.get(branch + '-0');
+                    if (timerMaster != undefined) {
+                        timerMaster.send('timeout ' + timer);
+                    }
+                }
+            });
+        }
     });
     ws.on('close', () => {
         console.log("Close Socket");
