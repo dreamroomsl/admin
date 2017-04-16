@@ -1,0 +1,1 @@
+ws://localhost:3000 ws://ec2-34-248-101-89.eu-west-1.compute.amazonaws.com/admin/ws/

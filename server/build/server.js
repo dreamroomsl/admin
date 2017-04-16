@@ -304,17 +304,29 @@ wsServer.on('connection', ws => {
         if (command == 'initialize') {
             let branch = parameters[1];
             let timer = parameters[2];
-            timers.set(branch + '-' + timer, ws);
+            let timeInfo = { websocket: ws };
+            timers.set(branch + '-' + timer, timeInfo);
         }
         else if (command == 'timeout') {
             timers.forEach((value, key, map) => {
-                if (value == webSocket) {
+                if (value.websocket == webSocket) {
                     let branch = key.split('-')[0];
                     let timer = key.split('-')[1];
                     let timerMaster = timers.get(branch + '-0');
                     if (timerMaster != undefined) {
-                        timerMaster.send('timeout ' + timer);
+                        timerMaster.websocket.send('timeout ' + timer);
                     }
+                }
+            });
+        }
+        else if (command == 'seconds') {
+            console.log('seconds = ' + parameters[1]);
+            timers.forEach((value, key, map) => {
+                if (value.websocket == webSocket) {
+                    let branch = key.split('-')[0];
+                    let timer = key.split('-')[1];
+                    value.seconds = parameters[1];
+                    timers.set(branch + '-' + timer, value);
                 }
             });
         }
@@ -322,7 +334,7 @@ wsServer.on('connection', ws => {
     ws.on('close', () => {
         console.log("Close Socket");
         timers.forEach((value, key, map) => {
-            if (value == webSocket) {
+            if (value.websocket == webSocket) {
                 timers.delete(key);
             }
         });
@@ -349,7 +361,8 @@ router.route("/timer/:branch/:timer?")
         var timer = req.params.timer;
         var action = req.query.action;
         var socket = undefined;
-        socket = timers.get(branch + '-' + timer);
+        let timerInfo = timers.get(branch + '-' + timer);
+        socket = timerInfo.websocket;
         if (action == 'start') {
             socket.send('start ' + req.query.seconds);
         }
@@ -362,10 +375,33 @@ router.route("/timer/:branch/:timer?")
         else if (action == 'resume') {
             socket.send('resume');
         }
+        else if (action == 'query') {
+            timerInfo.seconds = undefined;
+            timers.set(branch + '-' + timer, timerInfo);
+            socket.send('query');
+        }
     }
     catch (exception) {
         socket = undefined;
     }
-    response = { "error": socket == undefined };
-    res.json(response);
+    if (action == 'query' && socket != undefined) {
+        let times = 20;
+        let interval = setInterval(() => {
+            if (timers.get(branch + '-' + timer).seconds != undefined) {
+                response = { "error": false, "seconds": timers.get(branch + '-' + timer).seconds };
+                res.json(response);
+                times = 0;
+            }
+            else {
+                times--;
+            }
+            if (times == 0) {
+                clearInterval(interval);
+            }
+        }, 200);
+    }
+    else {
+        response = { "error": socket == undefined };
+        res.json(response);
+    }
 });

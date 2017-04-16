@@ -14,6 +14,7 @@ interface CounterInfo {
 interface TimerInfo {
   id        : number;
   installed : boolean;
+  seconds?  : string;
 }
 
 @Component({
@@ -41,10 +42,10 @@ export class Timers {
     });
   }
 
-  executeAction(timer : string, action : string, minutes : number) {
+  executeAction(timer : string, action : string, seconds : number) {
     console.log("timer=" + timer);
 
-    let seconds = ((minutes * 60) + 1);
+    seconds++;
 
     this.http.put(app.nodejsServer + '/timer/' + this.settings.branch + '/' + timer + '?action=' + action + '&seconds=' + seconds, undefined)
     .map(response => response.json())
@@ -53,6 +54,21 @@ export class Timers {
       if (response.error) {
         console.log('Error!');
         $('#timer' + timer).addClass('btn-danger')
+      }
+      if (response.seconds != undefined) {
+        this.timers.forEach((ti) => {
+          if (ti.id == timer) {
+            // Math.trunc generates a compilation error using target es5. Do not mind
+            let minutes = Math.abs(Math.trunc(parseInt(response.seconds) / 60));
+            let seconds = Math.abs(Math.trunc(parseInt(response.seconds) % 60));
+
+            ti.seconds = '' + (parseInt(response.seconds) < 0 ? '-' : '') + (minutes < 10 ? "0" : "") + minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+
+            setTimeout(()=> {
+              ti.seconds = undefined;
+            }, 3000);
+          }
+        });
       }
     });
 
